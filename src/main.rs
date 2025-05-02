@@ -1,6 +1,8 @@
 use clap::Parser;
 use config::{Config, File, FileFormat};
 use notify_rust::Notification;
+use std::thread::sleep;
+use std::time::Duration;
 
 const APP_NAME: &str = "holler";
 const DEFAULT_ICON_PATH: &str = "assets/icon.png";
@@ -10,6 +12,7 @@ struct HollerConfig {
     title: Option<String>,
     body: Option<String>,
     icon_path: Option<String>,
+    seconds: Option<u64>,
 }
 
 impl Default for HollerConfig {
@@ -18,6 +21,7 @@ impl Default for HollerConfig {
             title: Some("holler".to_string()),
             body: Some("Done!".to_string()),
             icon_path: Some(DEFAULT_ICON_PATH.to_string()),
+            seconds: Some(0),
         }
     }
 }
@@ -34,6 +38,11 @@ struct Args {
     /// can be specified with -b or --body
     #[arg(short = 'b', long = "body")]
     body: Option<String>,
+
+    /// Number of seconds to wait before sending the notification
+    /// can be specified with -s or --seconds
+    #[arg(short = 's', long = "seconds")]
+    seconds: Option<u64>,
 }
 
 fn load_config() -> HollerConfig {
@@ -72,6 +81,13 @@ fn main() -> Result<(), notify_rust::error::Error> {
         .unwrap_or_else(|| "Done!".to_string());
     let icon_path = config.icon_path
         .unwrap_or_else(|| DEFAULT_ICON_PATH.to_string());
+    let seconds = args.seconds
+        .or(config.seconds)
+        .unwrap_or(0);
+
+    if seconds > 0 {
+        sleep(Duration::from_secs(seconds));
+    }
 
     // Determine OS and send notification accordingly
     #[cfg(target_os = "macos")]

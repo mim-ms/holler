@@ -9,4 +9,8 @@ body = "Done!"
 
 # Path to the icon file
 # Can be absolute or relative to the current directory
-icon_path = "assets/icon.png" 
+icon_path = "assets/icon.png"
+
+# Number of seconds to wait before sending the notification
+# Default is 0 (send immediately)
+seconds = 0 
