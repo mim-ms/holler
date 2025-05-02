@@ -1,0 +1,10 @@
+[package]
+name = "holler"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+notify-rust = "4" # Or the latest version
+clap = { version = "4", features = [
+  "derive",
+] } # For CLI argument parsing (optional, but recommended)
