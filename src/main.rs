@@ -49,9 +49,7 @@ fn main() -> Result<(), notify_rust::error::Error> {
             }
             _ => {
                 eprintln!("Unsupported notification backend: {}", backend);
-                return Err(notify_rust::error::Error::Generic(
-                    "Unsupported backend".to_string(),
-                ));
+                return Err(format!("Unsupported backend: {}", backend).as_str().into());
             }
         }
     }
