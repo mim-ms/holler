@@ -1,0 +1,12 @@
+# Holler Configuration File
+# Place this file in your home directory as ~/.hollerrc
+
+# Default title for notifications
+title = "holler"
+
+# Default body for notifications
+body = "Done!"
+
+# Path to the icon file
+# Can be absolute or relative to the current directory
+icon_path = "assets/icon.png" 

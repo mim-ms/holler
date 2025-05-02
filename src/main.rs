@@ -1,34 +1,86 @@
 use clap::Parser;
+use config::{Config, File, FileFormat};
 use notify_rust::Notification;
 
 const APP_NAME: &str = "holler";
-const ICON_PATH: &str = "assets/icon.png";
+const DEFAULT_ICON_PATH: &str = "assets/icon.png";
+
+#[derive(Debug, serde::Deserialize)]
+struct HollerConfig {
+    title: Option<String>,
+    body: Option<String>,
+    icon_path: Option<String>,
+}
+
+impl Default for HollerConfig {
+    fn default() -> Self {
+        HollerConfig {
+            title: Some("holler".to_string()),
+            body: Some("Done!".to_string()),
+            icon_path: Some(DEFAULT_ICON_PATH.to_string()),
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// The title of the notification
     /// can be specified with -t or --title
-    #[arg(short = 't', long = "title", default_value = "holler")]
-    title: String,
+    #[arg(short = 't', long = "title")]
+    title: Option<String>,
 
     /// The body/message of the notification
     /// can be specified with -b or --body
-    #[arg(short = 'b', long = "body", default_value = "Done!")]
-    body: String,
+    #[arg(short = 'b', long = "body")]
+    body: Option<String>,
+}
+
+fn load_config() -> HollerConfig {
+    let home_dir = match dirs::home_dir() {
+        Some(dir) => dir,
+        None => return HollerConfig::default(),
+    };
+    
+    let config_path = home_dir.join(".hollerrc");
+    if !config_path.exists() {
+        return HollerConfig::default();
+    }
+
+    match Config::builder()
+        .add_source(File::from(config_path).format(FileFormat::Toml))
+        .build()
+        .and_then(|c| c.try_deserialize::<HollerConfig>())
+    {
+        Ok(cfg) => cfg,
+        Err(e) => {
+            eprintln!("Warning: Error parsing config file: {}", e);
+            HollerConfig::default()
+        }
+    }
 }
 
 fn main() -> Result<(), notify_rust::error::Error> {
     let args = Args::parse();
+    let config = load_config();
+
+    let title = args.title
+        .or(config.title)
+        .unwrap_or_else(|| "holler".to_string());
+    let body = args.body
+        .or(config.body)
+        .unwrap_or_else(|| "Done!".to_string());
+    let icon_path = config.icon_path
+        .unwrap_or_else(|| DEFAULT_ICON_PATH.to_string());
 
     // Determine OS and send notification accordingly
     #[cfg(target_os = "macos")]
     {
         Notification::new()
-            .summary(&args.title)
-            .body(&args.body)
+            .summary(&title)
+            .body(&body)
             .appname(APP_NAME)
-            .icon(ICON_PATH)
+            .icon(&icon_path)
             .timeout(6000)
             .show()?;
     }
@@ -40,10 +92,10 @@ fn main() -> Result<(), notify_rust::error::Error> {
         match backend.as_str() {
             "dbus-send" | "notify-osd" => {
                 Notification::new()
-                    .summary(&args.title)
-                    .body(&args.body)
+                    .summary(&title)
+                    .body(&body)
                     .appname(APP_NAME)
-                    .icon(ICON_PATH)
+                    .icon(&icon_path)
                     .timeout(6000)
                     .show()?;
             }

@@ -8,3 +8,6 @@ notify-rust = "4" # Or the latest version
 clap = { version = "4", features = [
   "derive",
 ] } # For CLI argument parsing (optional, but recommended)
+config = "0.14" # For configuration file handling
+dirs = "5.0" # For finding home directory
+serde = { version = "1.0", features = ["derive"] } # For configuration deserialization
